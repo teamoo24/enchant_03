@@ -25,22 +25,38 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const PIXI = __importStar(require("pixi.js"));
 const win_w = window.innerWidth;
-const win_h = window.innerHeight;
 const g_TICK = 62;
 const FPS = Math.round(1000 / g_TICK);
 const rand = (num) => Math.floor(Math.random() * num);
 let g_Time = 0;
-let PIXI_Text_array = new Array();
+let tick = 0;
+let PIXI_Text_array;
+let label_tick;
+const addLabel = () => {
+    let score = rand(100);
+    let r = rand(256);
+    let g = rand(256);
+    let b = rand(256);
+    let x = rand(win_w);
+    let y = rand(win_w);
+    const style = new PIXI.TextStyle({
+        fontFamily: 'monospace',
+        fontSize: 16,
+        fill: ["#" + r.toString(16) + g.toString(16) + b.toString(16)]
+    });
+    let text = new PIXI.Text(score + "点", style);
+    text.x = x;
+    text.y = y;
+    return text;
+};
 window.onload = () => {
     //PIXIApplicationを生成
     const app = new PIXI.Application({
         width: win_w, height: win_w, backgroundColor: 0x1099bb
     });
     document.body.appendChild(app.view);
-    const basicText = new PIXI.Text("FPS:" + FPS);
-    basicText.x = 0;
-    basicText.y = 10;
-    app.stage.addChild(basicText);
+    PIXI_Text_array = new Array();
+    label_tick = new Array();
     app.ticker.add((delta) => {
         var timeNow = (new Date()).getTime();
         var timeDiff = timeNow - g_Time;
@@ -48,11 +64,28 @@ window.onload = () => {
             return;
         }
         else {
-            game_ticker();
+            tick++;
+            for (var i = app.stage.children.length - 1; i >= 0; i--) {
+                app.stage.removeChild(app.stage.children[i]);
+            }
+            ;
+            if (tick % 3 == 0) {
+                PIXI_Text_array.push(addLabel());
+                label_tick.push(0);
+            }
+            PIXI_Text_array.forEach((element, index) => {
+                element.y--;
+                app.stage.addChild(element);
+            });
+            label_tick.forEach((element, index) => {
+                label_tick[index]++;
+                if (element > 10) {
+                    delete PIXI_Text_array[index];
+                    delete label_tick[index];
+                }
+            });
         }
         // We are now meeting the frame rate, so reset the last time the animation is done
         g_Time = timeNow;
     });
-};
-const game_ticker = () => {
 };
